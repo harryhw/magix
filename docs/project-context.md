@@ -20,7 +20,7 @@
 | UI | MenuBarExtra + `Window("Magix Settings")` |
 | Input | MultitouchSupport + CGEventTap |
 | Mission Control / Exposé / Desktop / Launchpad | CoreDock + keyboard fallbacks |
-| Zoom | App zoom ⌘+scroll default |
+| Zoom | Default **⌘= / ⌘-** (Figma); optional ⌘+scroll / ⌃+scroll |
 | Templates | Modifier-gated by default (⌥) |
 | Repo | Local only at `/Users/hoanghai/projects/magix` |
 

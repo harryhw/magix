@@ -152,7 +152,7 @@ struct MagixConfig: Codable, Equatable {
 
     static let `default` = MagixConfig(
         bindings: MagixConfig.defaultBindings,
-        zoomBackend: .appZoom,
+        zoomBackend: .keyboardChord,
         requireModifiersForTemplates: true,
         enableSoftwarePinch: true,
         magicMouseOnly: true,

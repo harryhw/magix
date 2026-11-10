@@ -52,13 +52,18 @@ enum MagixAction: String, Codable, CaseIterable, Identifiable, Hashable {
 }
 
 enum ZoomBackend: String, Codable, CaseIterable, Identifiable, Hashable {
+    /// ⌘= / ⌘- — works in Figma Desktop and most design/dev apps.
+    case keyboardChord
+    /// ⌘ + scroll wheel — Safari / Preview style continuous zoom.
     case appZoom
+    /// ⌃ + scroll — system Accessibility Zoom.
     case accessibilityZoom
 
     var id: String { rawValue }
 
     var displayName: String {
         switch self {
+        case .keyboardChord: return "Keyboard (⌘= / ⌘-) — Figma-friendly"
         case .appZoom: return "App zoom (⌘ + scroll)"
         case .accessibilityZoom: return "Accessibility Zoom (⌃ + scroll)"
         }
@@ -93,11 +98,9 @@ final class ActionRunner {
             if dock.send("com.apple.launchpad.toggle") { return "CoreDock" }
             return "unavailable"
         case .zoomIn:
-            postZoomScroll(direction: 1, backend: zoomBackend)
-            return zoomBackend == .appZoom ? "⌘scroll" : "⌃scroll"
+            return postZoom(direction: .in, backend: zoomBackend)
         case .zoomOut:
-            postZoomScroll(direction: -1, backend: zoomBackend)
-            return zoomBackend == .appZoom ? "⌘scroll" : "⌃scroll"
+            return postZoom(direction: .out, backend: zoomBackend)
         case .keyboardShortcut:
             guard let keyCode = parameters.keyCode else { return "missing key" }
             synthesizeKey(keyCode: CGKeyCode(keyCode), flags: parameters.keyModifiers.cgEventFlags)
@@ -112,8 +115,29 @@ final class ActionRunner {
         }
     }
 
-    private func postZoomScroll(direction: Int32, backend: ZoomBackend) {
-        let flags: CGEventFlags = (backend == .appZoom) ? .maskCommand : .maskControl
+    private enum ZoomDirection {
+        case `in`, out
+    }
+
+    /// Figma ignores ⌘+scroll; it zooms on ⌘= / ⌘- (same as ⌘+ / ⌘-).
+    @discardableResult
+    private func postZoom(direction: ZoomDirection, backend: ZoomBackend) -> String {
+        switch backend {
+        case .keyboardChord:
+            // ANSI US: '=' = 24, '-' = 27. ⌘= is Figma's zoom-in; ⌘- zoom-out.
+            let keyCode: CGKeyCode = (direction == .in) ? 24 : 27
+            synthesizeKey(keyCode: keyCode, flags: .maskCommand)
+            return direction == .in ? "⌘=" : "⌘-"
+        case .appZoom:
+            postZoomScroll(direction: direction == .in ? 1 : -1, flags: .maskCommand)
+            return "⌘scroll"
+        case .accessibilityZoom:
+            postZoomScroll(direction: direction == .in ? 1 : -1, flags: .maskControl)
+            return "⌃scroll"
+        }
+    }
+
+    private func postZoomScroll(direction: Int32, flags: CGEventFlags) {
         guard let event = CGEvent(
             scrollWheelEvent2Source: nil,
             units: .pixel,

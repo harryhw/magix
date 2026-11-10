@@ -71,7 +71,7 @@ In Settings → Status:
 |---------|----------|
 | 2-finger swipe up | Mission Control |
 | 2-finger swipe down | App Exposé |
-| Pinch in/out while holding **⌥** | App zoom out/in (⌘+scroll) |
+| Pinch in/out while holding **⌥** | Zoom in/out via **⌘= / ⌘-** (Figma-friendly; ⌘+scroll optional) |
 
 Watch menu bar / Status for **Last gesture** and **Last action**.  
 Disable Magix from the menu to restore stock mouse behavior.
@@ -86,7 +86,7 @@ Disable Magix from the menu to restore stock mouse behavior.
 | 2-finger swipe down | App Exposé | None |
 | Software pinch out / in | Zoom in / out | **⌥ by default** |
 
-Zoom backend default: **App zoom (⌘ + scroll)**; Settings can switch to Accessibility Zoom (⌃ + scroll).
+Zoom backend default: **Keyboard (⌘= / ⌘-)** for Figma. Optional: ⌘+scroll (Safari/Preview) or ⌃+scroll (Accessibility Zoom). Pinch mappings still require holding **⌥**.
 
 ---
 

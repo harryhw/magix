@@ -91,6 +91,9 @@ private struct ControlSettingsTab: View {
                         Text(backend.displayName).tag(backend)
                     }
                 }
+                Text("Figma Desktop ignores ⌘+scroll — use Keyboard (⌘= / ⌘-). Hold ⌥ while pinching for the default zoom mappings.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
 
                 Toggle("Enable software pinch recognition", isOn: Binding(
                     get: { appModel.config.enableSoftwarePinch },
@@ -166,11 +169,13 @@ private struct StatusSettingsTab: View {
             }
 
             Section("Manual tests") {
-                Text("Fire actions without needing live Multitouch frames.")
+                Text("Fire the same events Magix would send — no gesture needed. For zoom, focus Figma first, then click Test Zoom.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Button("Test Mission Control") { appModel.debugMissionControl() }
                 Button("Test App Exposé") { appModel.debugAppExpose() }
+                Button("Test Zoom In") { appModel.debugZoomIn() }
+                Button("Test Zoom Out") { appModel.debugZoomOut() }
                 Button("Inject synthetic swipe up") { appModel.debugInjectSwipeUp() }
                 Button("Inject synthetic swipe down") { appModel.debugInjectSwipeDown() }
             }

@@ -149,6 +149,34 @@ final class AppModel: ObservableObject {
         refreshEngineDiagnostics()
     }
 
+    func debugZoomIn() {
+        activateZoomTargetAppThen {
+            _ = self.engine.debugPerform(.zoomIn)
+            self.refreshEngineDiagnostics()
+        }
+    }
+
+    func debugZoomOut() {
+        activateZoomTargetAppThen {
+            _ = self.engine.debugPerform(.zoomOut)
+            self.refreshEngineDiagnostics()
+        }
+    }
+
+    /// Keys must land in Figma/Safari, not Magix Settings. Prefer Figma if running.
+    private func activateZoomTargetAppThen(_ work: @escaping () -> Void) {
+        let magixID = Bundle.main.bundleIdentifier
+        let apps = NSWorkspace.shared.runningApplications.filter {
+            $0.activationPolicy == .regular && $0.bundleIdentifier != magixID
+        }
+        let figma = apps.first {
+            ($0.bundleIdentifier ?? "").localizedCaseInsensitiveContains("figma")
+        }
+        let target = figma ?? apps.first { $0.isActive } ?? apps.first
+        target?.activate(options: [.activateIgnoringOtherApps])
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: work)
+    }
+
     private func startEngineIfPossible() {
         permissionsStatus = permissions.currentStatus()
         guard permissionsStatus.isReady else {
