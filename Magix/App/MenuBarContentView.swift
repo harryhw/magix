@@ -1,83 +1,57 @@
 import AppKit
 import SwiftUI
 
+/// MenuBarExtra `.menu` style flattens layout views: each `Text` in an `HStack`
+/// becomes its own disabled menu row. Keep status as single-string Text items.
 struct MenuBarContentView: View {
     @ObservedObject var appModel: AppModel
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text("Magix")
-                    .font(.headline)
-                Spacer()
-                Text(appModel.isEnabled ? "On" : "Off")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(appModel.isEnabled ? .green : .secondary)
+        Toggle("Enable gestures", isOn: Binding(
+            get: { appModel.isEnabled },
+            set: { appModel.setEnabled($0) }
+        ))
+
+        Divider()
+
+        Text(primaryStatusLine)
+        Text(secondaryStatusLine)
+
+        Divider()
+
+        if !appModel.permissionsStatus.isReady {
+            Button("Fix Permissions…") {
+                openMagixWindow(id: "permissions")
             }
-            .padding(.horizontal, 12)
-            .padding(.top, 10)
-            .padding(.bottom, 4)
-
-            Toggle("Enable gestures", isOn: Binding(
-                get: { appModel.isEnabled },
-                set: { appModel.setEnabled($0) }
-            ))
-            .padding(.horizontal, 12)
-            .padding(.bottom, 8)
-
-            Divider()
-
-            Group {
-                labeled("Engine", appModel.engineStatus.menuLabel)
-                labeled("Permissions", appModel.permissionsStatus.isReady ? "Ready" : "Need attention")
-                labeled("Frames", "\(appModel.frameCount)")
-                labeled("Last", appModel.lastRecognized)
-            }
-            .padding(.vertical, 4)
-
-            Divider()
-
-            if !appModel.permissionsStatus.isReady {
-                Button("Fix Permissions…") {
-                    openMagixWindow(id: "permissions")
-                }
-            }
-
-            Button("Settings…") {
-                openMagixWindow(id: "settings")
-            }
-            .keyboardShortcut(",", modifiers: .command)
-
-            Button("Refresh status") {
-                appModel.refreshProbe()
-                appModel.refreshPermissions()
-            }
-
-            Divider()
-
-            Button("Quit Magix") {
-                NSApplication.shared.terminate(nil)
-            }
-            .keyboardShortcut("q", modifiers: .command)
         }
-        .frame(minWidth: 240)
+
+        Button("Settings…") {
+            openMagixWindow(id: "settings")
+        }
+        .keyboardShortcut(",", modifiers: .command)
+
+        Divider()
+
+        Button("Quit Magix") {
+            NSApplication.shared.terminate(nil)
+        }
+        .keyboardShortcut("q", modifiers: .command)
         .onAppear {
             appModel.refreshPermissions()
         }
     }
 
-    private func labeled(_ title: String, _ value: String) -> some View {
-        HStack {
-            Text(title)
-                .foregroundStyle(.secondary)
-            Spacer()
-            Text(value)
-                .lineLimit(1)
-        }
-        .font(.caption)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 1)
+    private var primaryStatusLine: String {
+        let engine = appModel.engineStatus.menuLabel
+        let permissions = appModel.permissionsStatus.isReady ? "ready" : "needs attention"
+        return "Engine: \(engine) · Permissions: \(permissions)"
+    }
+
+    private var secondaryStatusLine: String {
+        let last = appModel.lastRecognized.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lastPart = (last.isEmpty || last == "—") ? "none" : last
+        return "Frames: \(appModel.frameCount) · Last: \(lastPart)"
     }
 
     private func openMagixWindow(id: String) {
