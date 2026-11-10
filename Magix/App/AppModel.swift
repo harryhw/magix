@@ -81,15 +81,47 @@ final class AppModel: ObservableObject {
         refreshEngineDiagnostics()
     }
 
-    func updateConfig(_ newConfig: MagixConfig) {
+    func updateConfig(_ newConfig: MagixConfig, restartEngine: Bool = false) {
         config = newConfig
         MagixConfigStore.shared.save(newConfig)
         engine.updateConfig(newConfig)
-        if isEnabled, permissionsStatus.isReady {
-            // Restart bridge so magicMouseOnly / thresholds apply cleanly.
+        if restartEngine, isEnabled, permissionsStatus.isReady {
             engine.stop()
             startEngineIfPossible()
         }
+    }
+
+    func saveBinding(_ binding: GestureBinding) {
+        var next = config
+        next.upsertBinding(binding)
+        updateConfig(next)
+    }
+
+    func deleteBinding(id: String) {
+        var next = config
+        next.removeBinding(id: id)
+        updateConfig(next)
+    }
+
+    func setBindingEnabled(id: String, enabled: Bool) {
+        var next = config
+        guard let index = next.bindings.firstIndex(where: { $0.id == id }) else { return }
+        next.bindings[index].enabled = enabled
+        updateConfig(next)
+    }
+
+    func resetBindingsToDefaults() {
+        var next = config
+        next.resetToDefaults()
+        // Preserve zoom / threshold preferences when resetting mappings only.
+        next.zoomBackend = config.zoomBackend
+        next.requireModifiersForTemplates = config.requireModifiersForTemplates
+        next.enableSoftwarePinch = config.enableSoftwarePinch
+        next.magicMouseOnly = config.magicMouseOnly
+        next.swipeThreshold = config.swipeThreshold
+        next.pinchThreshold = config.pinchThreshold
+        next.bindings = MagixConfig.defaultBindings
+        updateConfig(next)
     }
 
     func refreshProbe() {

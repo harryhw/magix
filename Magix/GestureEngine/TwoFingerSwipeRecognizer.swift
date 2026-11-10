@@ -1,10 +1,8 @@
 import Foundation
 
-/// Recognizes discrete 2-finger vertical swipes (fire once per contact set).
+/// Recognizes discrete 2-finger swipes in four directions (fire once per contact set).
 final class TwoFingerSwipeRecognizer {
     var threshold: Double = 0.12
-    /// Reject swipes that drift too far horizontally relative to vertical travel.
-    var maxHorizontalRatio: Double = 0.85
 
     private var startCentroidX: Double?
     private var startCentroidY: Double?
@@ -38,24 +36,12 @@ final class TwoFingerSwipeRecognizer {
         let dx = centroidX - startX
         let dy = centroidY - startY
 
-        // Prefer velocity if fingers report meaningful motion.
-        let avgVY = touches.map(\.velocityY).reduce(0, +) / 2
-        let vertical = abs(dy) >= abs(avgVY) * 0.002 ? dy : avgVY
+        guard max(abs(dx), abs(dy)) >= threshold else { return nil }
 
-        if abs(dx) > abs(vertical) * maxHorizontalRatio, abs(vertical) < threshold {
-            return nil
+        fired = true
+        if abs(dy) >= abs(dx) {
+            return dy >= 0 ? .swipeUp : .swipeDown
         }
-
-        // On Magic Mouse, increasing normalized Y is toward the front of the mouse
-        // (user's "swipe up" / away from themselves) in practice for family 112 — tune if inverted.
-        if vertical >= threshold {
-            fired = true
-            return .swipeUp
-        }
-        if vertical <= -threshold {
-            fired = true
-            return .swipeDown
-        }
-        return nil
+        return dx >= 0 ? .swipeRight : .swipeLeft
     }
 }

@@ -23,6 +23,8 @@ enum GestureEngineStatus: Equatable {
 enum RecognizedGesture: Equatable {
     case swipeUp
     case swipeDown
+    case swipeLeft
+    case swipeRight
     case pinchIn
     case pinchOut
     case twoFingerScrollZoom(delta: Double)
@@ -97,36 +99,50 @@ final class GestureEngine: MultitouchFrameSink {
         bridge.probeDevices()
     }
 
-    /// Manual / debug: fire an action binding without Multitouch hardware.
     @discardableResult
-    func debugPerform(_ action: MagixAction) -> String {
+    func debugPerform(_ action: MagixAction, parameters: ActionParameters = .empty) -> String {
         eventTap.beginSuppressing(duration: 0.4)
-        let result = actions.perform(action, zoomBackend: config.zoomBackend)
+        let result = actions.perform(action, parameters: parameters, zoomBackend: config.zoomBackend)
         lastRecognized = "Debug \(action.displayName)"
-        lastActionResult = "\(action.displayName) via \(result)"
+        lastActionResult = "\(action.displayTitle(parameters: parameters)) via \(result)"
         return lastActionResult
     }
 
-    /// Manual / debug: inject a synthetic 2-finger vertical swipe through recognizers.
     func debugInjectSwipe(up: Bool) {
-        let y0 = 0.40
-        let y1 = up ? 0.40 + config.swipeThreshold + 0.05 : 0.40 - config.swipeThreshold - 0.05
-        let frames = [y0, y1].map { y -> MultitouchFrame in
-            MultitouchFrame(
-                deviceID: 0,
-                familyID: 112,
-                timestamp: ProcessInfo.processInfo.systemUptime,
-                frameNumber: Int.random(in: 1...10_000),
-                contacts: [
-                    MultitouchContact(identifier: 1, normalizedX: 0.35, normalizedY: y, velocityX: 0, velocityY: up ? 1 : -1, size: 0.5, state: 4, isTouching: true),
-                    MultitouchContact(identifier: 2, normalizedX: 0.65, normalizedY: y, velocityX: 0, velocityY: up ? 1 : -1, size: 0.5, state: 4, isTouching: true),
-                ],
-                isLikelyMagicMouse: true
-            )
+        debugInjectSwipe(direction: up ? .swipeUp : .swipeDown)
+    }
+
+    func debugInjectSwipe(direction: RecognizedGesture) {
+        let frames: [MultitouchFrame]
+        switch direction {
+        case .swipeUp, .swipeDown:
+            let up = direction == .swipeUp
+            let y0 = 0.40
+            let y1 = up ? 0.40 + config.swipeThreshold + 0.05 : 0.40 - config.swipeThreshold - 0.05
+            frames = [y0, y1].map { y in
+                frame(contacts: [
+                    contact(id: 1, x: 0.35, y: y, vy: up ? 1 : -1),
+                    contact(id: 2, x: 0.65, y: y, vy: up ? 1 : -1),
+                ])
+            }
+        case .swipeLeft, .swipeRight:
+            let right = direction == .swipeRight
+            let x0 = 0.40
+            let x1 = right ? 0.40 + config.swipeThreshold + 0.05 : 0.40 - config.swipeThreshold - 0.05
+            frames = [x0, x1].map { x in
+                frame(contacts: [
+                    contact(id: 1, x: x, y: 0.45, vx: right ? 1 : -1),
+                    contact(id: 2, x: x, y: 0.55, vx: right ? 1 : -1),
+                ])
+            }
+        default:
+            return
         }
+
         active = true
-        for frame in frames {
-            multitouchBridge(bridge, didReceive: frame)
+        swipeRecognizer.reset()
+        for item in frames {
+            multitouchBridge(bridge, didReceive: item)
         }
     }
 
@@ -148,7 +164,7 @@ final class GestureEngine: MultitouchFrameSink {
         guard let binding = config.binding(for: gesture) else { return }
 
         let requiresModifier = binding.requiresModifier
-            || (config.requireModifiersForTemplates && isTemplateGesture(gesture))
+            || (config.requireModifiersForTemplates && binding.gestureKind.isModifierGatedTemplateKind)
         if requiresModifier {
             let required = binding.requiredModifiers.isEmpty ? ModifierSet([.option]) : binding.requiredModifiers
             if !modifierChecker.isSatisfied(required) {
@@ -165,25 +181,48 @@ final class GestureEngine: MultitouchFrameSink {
         lastRecognized = label(for: gesture)
 
         eventTap.beginSuppressing(duration: 0.5)
-        let result = actions.perform(binding.action, zoomBackend: config.zoomBackend)
-        lastActionResult = "\(binding.action.displayName) via \(result)"
-        NSLog("[Magix] Gesture %@ → %@ (%@)", lastRecognized, binding.action.displayName, result)
-    }
-
-    private func isTemplateGesture(_ gesture: RecognizedGesture) -> Bool {
-        switch gesture {
-        case .pinchIn, .pinchOut, .twoFingerScrollZoom: return true
-        case .swipeUp, .swipeDown: return false
-        }
+        let result = actions.perform(
+            binding.action,
+            parameters: binding.parameters,
+            zoomBackend: config.zoomBackend
+        )
+        lastActionResult = "\(binding.action.displayTitle(parameters: binding.parameters)) via \(result)"
+        NSLog("[Magix] Gesture %@ → %@ (%@)", lastRecognized, lastActionResult, result)
     }
 
     private func label(for gesture: RecognizedGesture) -> String {
         switch gesture {
         case .swipeUp: return "Swipe up"
         case .swipeDown: return "Swipe down"
+        case .swipeLeft: return "Swipe left"
+        case .swipeRight: return "Swipe right"
         case .pinchIn: return "Pinch in"
         case .pinchOut: return "Pinch out"
         case .twoFingerScrollZoom(let delta): return String(format: "Scroll-zoom %.2f", delta)
         }
+    }
+
+    private func contact(id: Int, x: Double, y: Double, vx: Double = 0, vy: Double = 0) -> MultitouchContact {
+        MultitouchContact(
+            identifier: id,
+            normalizedX: x,
+            normalizedY: y,
+            velocityX: vx,
+            velocityY: vy,
+            size: 0.5,
+            state: 4,
+            isTouching: true
+        )
+    }
+
+    private func frame(contacts: [MultitouchContact]) -> MultitouchFrame {
+        MultitouchFrame(
+            deviceID: 0,
+            familyID: 112,
+            timestamp: ProcessInfo.processInfo.systemUptime,
+            frameNumber: Int.random(in: 1...10_000),
+            contacts: contacts,
+            isLikelyMagicMouse: true
+        )
     }
 }

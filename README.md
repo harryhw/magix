@@ -2,7 +2,7 @@
 
 Local-only macOS menu-bar utility that extends **Apple Magic Mouse** multitouch gestures.
 
-**Status:** MAG-4 — live MultitouchSupport probe + contact callbacks, CGEventTap scroll suppression, MVP gesture→action wiring.
+**Status:** Custom gesture mapper + polished Settings/menu control UX on top of live MultitouchSupport / CGEventTap.
 
 **Requirements:** macOS 14+, Xcode 15+ (built on Harry’s Mac mini).
 
@@ -26,7 +26,9 @@ open build/Build/Products/Debug/Magix.app
 In Xcode: select **Magix** scheme → set your **Team** under Signing → Run.  
 The app is `LSUIElement` — menu bar only, no Dock icon.
 
-**Open Settings:** click the Magix menu-bar icon → **Settings…**. That opens a real “Magix Settings” window (not the fragile SwiftUI `Settings` scene).
+**Open Settings:** Magix menu-bar icon → **Settings…** (opens “Magix Settings”).
+
+**Try custom gestures:** Settings → **Gestures** → **Add Gesture** → pick template or type → choose action (Mission Control, shortcut, Open app, …) → **Save**. Defaults remain swipe up/down + ⌥ pinch zoom.
 
 ---
 

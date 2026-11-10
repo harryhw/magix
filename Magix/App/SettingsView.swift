@@ -6,10 +6,10 @@ struct SettingsView: View {
 
     var body: some View {
         TabView {
-            GeneralSettingsTab(appModel: appModel)
-                .tabItem { Label("General", systemImage: "gearshape") }
+            ControlSettingsTab(appModel: appModel)
+                .tabItem { Label("Control", systemImage: "switch.2") }
 
-            GesturesSettingsTab(appModel: appModel)
+            GesturesEditorView(appModel: appModel)
                 .tabItem { Label("Gestures", systemImage: "hand.draw") }
 
             StatusSettingsTab(appModel: appModel)
@@ -18,7 +18,7 @@ struct SettingsView: View {
             PermissionsSettingsTab(appModel: appModel)
                 .tabItem { Label("Permissions", systemImage: "lock.shield") }
         }
-        .frame(minWidth: 520, minHeight: 400)
+        .frame(minWidth: 560, minHeight: 440)
         .onAppear {
             MagixWindowSupport.bringToFrontForWindow()
         }
@@ -28,72 +28,57 @@ struct SettingsView: View {
     }
 }
 
-private struct GeneralSettingsTab: View {
+private struct ControlSettingsTab: View {
     @ObservedObject var appModel: AppModel
     @StateObject private var launchAtLogin = LaunchAtLoginController()
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         Form {
-            Section("Magix") {
-                Toggle("Enable Magix", isOn: Binding(
-                    get: { appModel.isEnabled },
-                    set: { appModel.setEnabled($0) }
-                ))
+            Section {
+                HStack(alignment: .top, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Magix")
+                            .font(.title2.weight(.semibold))
+                        Text(engineCaption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Toggle(appModel.isEnabled ? "On" : "Off", isOn: Binding(
+                        get: { appModel.isEnabled },
+                        set: { appModel.setEnabled($0) }
+                    ))
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+                    .accessibilityLabel("Enable Magix")
+                }
 
+                LabeledContent("Engine") {
+                    Text(appModel.engineStatus.menuLabel)
+                        .foregroundStyle(engineColor)
+                }
+                LabeledContent("Permissions") {
+                    Text(appModel.permissionsStatus.isReady ? "Ready" : appModel.permissionsStatus.statusSummary)
+                        .foregroundStyle(appModel.permissionsStatus.isReady ? .green : .orange)
+                }
+
+                if !appModel.permissionsStatus.isReady {
+                    Button("Fix Permissions…") {
+                        MagixWindowSupport.bringToFrontForWindow()
+                        openWindow(id: "permissions")
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+
+            Section("Startup") {
                 Toggle("Launch at Login", isOn: launchAtLogin.binding)
                 Text(launchAtLogin.helpText)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
-            Section("About") {
-                LabeledContent("Version", value: Bundle.main.shortVersionString)
-                LabeledContent("Build", value: Bundle.main.buildNumber)
-                Text("Local utility for Magic Mouse multitouch gestures. Outside Mac App Store.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .formStyle(.grouped)
-        .padding()
-    }
-}
-
-private struct GesturesSettingsTab: View {
-    @ObservedObject var appModel: AppModel
-
-    var body: some View {
-        Form {
-            Section("MVP bindings") {
-                ForEach(appModel.config.bindings) { binding in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(binding.displayTitle)
-                            .font(.body.weight(.medium))
-                        Text(binding.summary)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.vertical, 2)
-                }
-            }
-
-            Section("Templates (post-MVP editor stub)") {
-                Text("Custom gesture↔action editing is not in MVP. Templates below are data-model stubs.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                ForEach(GestureTemplateCatalog.all) { template in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(template.name)
-                        Text(template.detail)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.vertical, 2)
-                }
-            }
-
-            Section("Zoom") {
+            Section("Zoom defaults") {
                 Picker("Zoom backend", selection: Binding(
                     get: { appModel.config.zoomBackend },
                     set: { backend in
@@ -107,21 +92,54 @@ private struct GesturesSettingsTab: View {
                     }
                 }
 
-                Toggle("Require modifiers for template actions", isOn: Binding(
-                    get: { appModel.config.requireModifiersForTemplates },
+                Toggle("Enable software pinch recognition", isOn: Binding(
+                    get: { appModel.config.enableSoftwarePinch },
                     set: { value in
                         var next = appModel.config
-                        next.requireModifiersForTemplates = value
+                        next.enableSoftwarePinch = value
                         appModel.updateConfig(next)
                     }
                 ))
-                Text("Pinch/zoom templates stay modifier-gated (⌥ by default) so normal 2-finger scroll remains usable.")
+
+                Toggle("Magic Mouse only", isOn: Binding(
+                    get: { appModel.config.magicMouseOnly },
+                    set: { value in
+                        var next = appModel.config
+                        next.magicMouseOnly = value
+                        appModel.updateConfig(next, restartEngine: true)
+                    }
+                ))
+            }
+
+            Section("About") {
+                LabeledContent("Version", value: Bundle.main.shortVersionString)
+                LabeledContent("Build", value: Bundle.main.buildNumber)
+                Text("Local Magic Mouse gesture utility. Outside Mac App Store.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
         .padding()
+    }
+
+    private var engineCaption: String {
+        if !appModel.permissionsStatus.isReady {
+            return "Waiting for Accessibility / Input Monitoring before gestures can run."
+        }
+        if appModel.isEnabled {
+            return "Gesture engine is active. Map custom gestures in the Gestures tab."
+        }
+        return "Gesture engine is paused. Turn Magix on to listen for Magic Mouse gestures."
+    }
+
+    private var engineColor: Color {
+        switch appModel.engineStatus {
+        case .running: return .green
+        case .needsPermissions, .error, .noMagicMouse: return .orange
+        case .disabled: return .secondary
+        case .idle: return .secondary
+        }
     }
 }
 
@@ -130,8 +148,8 @@ private struct StatusSettingsTab: View {
 
     var body: some View {
         Form {
-            Section("Engine") {
-                LabeledContent("Status", value: appModel.engineStatus.menuLabel)
+            Section("Live status") {
+                LabeledContent("Engine", value: appModel.engineStatus.menuLabel)
                 LabeledContent("Frames received", value: "\(appModel.frameCount)")
                 LabeledContent("Last gesture", value: appModel.lastRecognized)
                 LabeledContent("Last action", value: appModel.lastActionResult)
@@ -147,8 +165,8 @@ private struct StatusSettingsTab: View {
                 }
             }
 
-            Section("Manual test (no Multitouch required)") {
-                Text("These fire action runners / synthetic recognizer frames to verify the stack before permissions unlock live mouse frames.")
+            Section("Manual tests") {
+                Text("Fire actions without needing live Multitouch frames.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Button("Test Mission Control") { appModel.debugMissionControl() }
@@ -172,24 +190,29 @@ private struct PermissionsSettingsTab: View {
 
     var body: some View {
         Form {
-            Section {
-                LabeledContent("Accessibility") {
-                    Text(appModel.permissionsStatus.accessibilityGranted ? "Granted" : "Missing")
-                        .foregroundStyle(appModel.permissionsStatus.accessibilityGranted ? .green : .orange)
+            Section("Required for gestures") {
+                permissionRow(
+                    title: "Accessibility",
+                    detail: "Event tap + synthetic keys/scroll",
+                    granted: appModel.permissionsStatus.accessibilityGranted,
+                    actionTitle: "Open Accessibility"
+                ) {
+                    PermissionsHelper.openAccessibilitySettings()
                 }
-                LabeledContent("Input Monitoring") {
-                    Text(inputMonitoringLabel)
-                        .foregroundStyle(appModel.permissionsStatus.inputMonitoringGranted ? .green : .orange)
+
+                permissionRow(
+                    title: "Input Monitoring",
+                    detail: "MultitouchSupport contact frames",
+                    granted: appModel.permissionsStatus.inputMonitoringGranted,
+                    unknown: appModel.permissionsStatus.inputMonitoringUnknown,
+                    actionTitle: "Open Input Monitoring"
+                ) {
+                    PermissionsHelper.openInputMonitoringSettings()
                 }
-                Text(appModel.permissionsStatus.statusSummary)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
 
             Section {
-                Button("Refresh status") {
-                    appModel.refreshPermissions()
-                }
+                Button("Refresh status") { appModel.refreshPermissions() }
                 Button("Request prompts…") {
                     appModel.permissions.requestAllPrompts()
                     appModel.refreshPermissions()
@@ -198,12 +221,6 @@ private struct PermissionsSettingsTab: View {
                     MagixWindowSupport.bringToFrontForWindow()
                     openWindow(id: "permissions")
                 }
-                Button("Open System Settings → Accessibility") {
-                    PermissionsHelper.openAccessibilitySettings()
-                }
-                Button("Open System Settings → Input Monitoring") {
-                    PermissionsHelper.openInputMonitoringSettings()
-                }
             }
         }
         .formStyle(.grouped)
@@ -211,10 +228,27 @@ private struct PermissionsSettingsTab: View {
         .onAppear { appModel.refreshPermissions() }
     }
 
-    private var inputMonitoringLabel: String {
-        if appModel.permissionsStatus.inputMonitoringGranted { return "Granted" }
-        if appModel.permissionsStatus.inputMonitoringUnknown { return "Not determined" }
-        return "Denied"
+    private func permissionRow(
+        title: String,
+        detail: String,
+        granted: Bool,
+        unknown: Bool = false,
+        actionTitle: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Text(granted ? "Granted" : (unknown ? "Not determined" : "Missing"))
+                .foregroundStyle(granted ? .green : .orange)
+            Button(actionTitle, action: action)
+                .disabled(granted)
+        }
     }
 }
 

@@ -2,51 +2,52 @@
 
 **Project:** Magix  
 **For:** Harry Huang  
-**Updated:** 2026-11-10 (MAG-4 live MVP bindings)  
+**Updated:** 2026-11-10 (custom gestures + Settings UX)  
 **On-disk path:** `/Users/hoanghai/projects/magix`
 
 ## Goals
 
-- Extend Apple Magic Mouse with useful multitouch gestures beyond stock macOS behavior.
-- MVP defaults:
-  - 2-finger swipe up → Mission Control
-  - 2-finger swipe down → App Exposé
-  - Pinch / zoom templates, **modifier-gated by default** (⌥)
-- Later: custom gesture ↔ action mapping UI (catalog stubbed).
+- Extend Apple Magic Mouse with multitouch gestures beyond stock macOS.
+- Defaults: swipe up → Mission Control, swipe down → App Exposé, modifier-gated pinch zoom.
+- Custom gesture ↔ action mappings in Settings (add / edit / delete, persisted).
+- Clear menu-bar + Settings control UX.
 
 ## Decisions (locked)
 
 | Decision | Choice |
 |----------|--------|
 | Min OS | macOS 14+ |
-| Stack | Swift + SwiftUI `MenuBarExtra` |
-| Input | MultitouchSupport contact frames + CGEventTap |
-| Mission Control / Exposé | `CoreDockSendNotification` from Dock.app; keyboard ⌃↑/⌃↓ fallback |
-| Zoom | App zoom ⌘+scroll default; Accessibility Zoom optional |
-| Templates | Modifier-gated by default; includes pinch-to-zoom |
+| UI | MenuBarExtra + `Window("Magix Settings")` |
+| Input | MultitouchSupport + CGEventTap |
+| Mission Control / Exposé / Desktop / Launchpad | CoreDock + keyboard fallbacks |
+| Zoom | App zoom ⌘+scroll default |
+| Templates | Modifier-gated by default (⌥) |
 | Repo | Local only at `/Users/hoanghai/projects/magix` |
-| Signing | Developer ID available — placeholders/notes only in repo |
 
-## What works on this Mac (2026-11-10)
+## What Harry can use now
 
-**Hardware present:** “Hoang’s Magic Mouse” (Bluetooth), Multitouch family **112**, deviceID embeds `…429b33c9`.
+**Settings → Gestures**
+- Scannable list of mappings with enable toggles
+- **Add Gesture** sheet: template quick-start, gesture type, action, modifiers
+- Actions: Mission Control, App Exposé, Show Desktop, Launchpad, Zoom in/out, Keyboard shortcut, Open app
+- Edit / delete / Restore Defaults
+- Persisted in UserDefaults (`magix.config.v2`)
 
-| Capability | Verified? | Notes |
-|------------|-----------|-------|
-| MultitouchSupport `dlopen` + `MTDeviceCreateList` | Yes | Enumerates Magic Mouse fam=112 |
-| Contact-frame callbacks delivering touches | **Pending user TCC** | CLI probe got 0 frames without Input Monitoring grant; app requests TCC on launch |
-| `CoreDockSendNotification` Mission Control | Yes | Resolved from Dock.app; toggled successfully from probe |
-| CGEventTap install | Code complete | Needs Accessibility trust for Magix.app |
-| Synthetic swipe → action path | Yes (in-app Status tests) | Debug inject / Test Mission Control buttons |
-| Live 2-finger swipe / pinch on mouse | Manual after permissions | Grant Accessibility + Input Monitoring, relaunch, confirm Frames > 0 |
+**Settings → Control**
+- Big on/off, engine + permission status, Fix Permissions CTA, Launch at Login, zoom options
 
-## Scaffold / MVP code layout
+**Menu bar**
+- Enable gestures, status lines, Settings…, Fix Permissions…, Quit
 
-Open: `Magix.xcodeproj`  
-Live modules: `Multitouch`, `EventTap`, `GestureEngine`, `Actions`, `Permissions`, `Config`, `App`.
+## Remaining stubs / caveats
 
-## Open questions
+- Live Multitouch frames still need Accessibility + Input Monitoring granted; tune thresholds after first live use.
+- Show Desktop / Launchpad depend on CoreDock notification names; keyboard fallbacks are best-effort.
+- Keyboard shortcut picker is a fixed key catalog (not a live key recorder).
+- Open app uses a file path (no security-scoped bookmark renewal yet).
+- 2-finger scroll-zoom recognizer kind exists in config; continuous scroll→zoom path is still lighter than swipe/pinch.
+- Custom editor does not yet do per-app overrides or import/export presets.
 
-1. Git hosting when Harry wants a remote.
-2. Pinch vs scroll-zoom feel after live frame tuning.
-3. Whether swipe Y axis needs invert after first successful live frames.
+## Hardware note (this Mac)
+
+Magic Mouse present earlier as Multitouch family **112** (“Hoang’s Magic Mouse”).
