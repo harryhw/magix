@@ -14,7 +14,11 @@ final class AppModel: ObservableObject {
     @Published var probeSummary: String = "Not probed yet"
     @Published var lastRecognized: String = "—"
     @Published var lastActionResult: String = "—"
+    @Published var lastActionError: String = "—"
+    @Published var lastDeliveryPath: String = "—"
     @Published var frameCount: UInt64 = 0
+    @Published var accessibilityTrusted: Bool = false
+    @Published var dockSPIAvailable: Bool = false
 
     let permissions = PermissionsHelper()
     let engine: GestureEngine
@@ -150,31 +154,14 @@ final class AppModel: ObservableObject {
     }
 
     func debugZoomIn() {
-        activateZoomTargetAppThen {
-            _ = self.engine.debugPerform(.zoomIn)
-            self.refreshEngineDiagnostics()
-        }
+        // Delivery path itself activates Figma / frontmost app before posting.
+        _ = engine.debugPerform(.zoomIn)
+        refreshEngineDiagnostics()
     }
 
     func debugZoomOut() {
-        activateZoomTargetAppThen {
-            _ = self.engine.debugPerform(.zoomOut)
-            self.refreshEngineDiagnostics()
-        }
-    }
-
-    /// Keys must land in Figma/Safari, not Magix Settings. Prefer Figma if running.
-    private func activateZoomTargetAppThen(_ work: @escaping () -> Void) {
-        let magixID = Bundle.main.bundleIdentifier
-        let apps = NSWorkspace.shared.runningApplications.filter {
-            $0.activationPolicy == .regular && $0.bundleIdentifier != magixID
-        }
-        let figma = apps.first {
-            ($0.bundleIdentifier ?? "").localizedCaseInsensitiveContains("figma")
-        }
-        let target = figma ?? apps.first { $0.isActive } ?? apps.first
-        target?.activate(options: [.activateIgnoringOtherApps])
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: work)
+        _ = engine.debugPerform(.zoomOut)
+        refreshEngineDiagnostics()
     }
 
     private func startEngineIfPossible() {
@@ -210,7 +197,11 @@ final class AppModel: ObservableObject {
         probeSummary = engine.probeSummary
         lastRecognized = engine.lastRecognized
         lastActionResult = engine.lastActionResult
+        lastActionError = engine.lastActionError
+        lastDeliveryPath = engine.lastDeliveryPath
         frameCount = engine.frameCount
+        accessibilityTrusted = permissionsStatus.accessibilityGranted
+        dockSPIAvailable = engine.dockSPIAvailable
         if isEnabled, case .running = engineStatus, !engine.multitouchRunning {
             if let err = engine.multitouchError {
                 engineStatus = err.localizedCaseInsensitiveContains("magic mouse") ? .noMagicMouse : .error(err)

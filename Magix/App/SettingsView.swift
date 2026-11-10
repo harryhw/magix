@@ -156,6 +156,19 @@ private struct StatusSettingsTab: View {
                 LabeledContent("Frames received", value: "\(appModel.frameCount)")
                 LabeledContent("Last gesture", value: appModel.lastRecognized)
                 LabeledContent("Last action", value: appModel.lastActionResult)
+                LabeledContent("Delivery path", value: appModel.lastDeliveryPath)
+                LabeledContent("Last error") {
+                    Text(appModel.lastActionError)
+                        .foregroundStyle(appModel.lastActionError == "—" ? Color.secondary : Color.orange)
+                }
+                LabeledContent("Accessibility") {
+                    Text(appModel.accessibilityTrusted ? "Trusted" : "NOT trusted — actions may be ignored")
+                        .foregroundStyle(appModel.accessibilityTrusted ? Color.green : Color.orange)
+                }
+                LabeledContent("CoreDock SPI", value: appModel.dockSPIAvailable ? "Resolved" : "Missing (keyboard fallback)")
+                Text("Live gestures and Test buttons share the same delivery path. Pinch zoom still requires holding ⌥.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section("Multitouch probe") {

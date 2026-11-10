@@ -1,4 +1,6 @@
 import AppKit
+import ApplicationServices
+import Carbon.HIToolbox
 import CoreGraphics
 import Darwin
 import Foundation
@@ -49,14 +51,19 @@ enum MagixAction: String, Codable, CaseIterable, Identifiable, Hashable {
         default: return false
         }
     }
+
+    /// Keyboard / scroll actions must target the frontmost user app, not Magix Settings.
+    var requiresFrontmostAppFocus: Bool {
+        switch self {
+        case .zoomIn, .zoomOut, .keyboardShortcut: return true
+        case .missionControl, .appExpose, .showDesktop, .launchpad, .openApp, .none: return false
+        }
+    }
 }
 
 enum ZoomBackend: String, Codable, CaseIterable, Identifiable, Hashable {
-    /// ⌘= / ⌘- — works in Figma Desktop and most design/dev apps.
     case keyboardChord
-    /// ⌘ + scroll wheel — Safari / Preview style continuous zoom.
     case appZoom
-    /// ⌃ + scroll — system Accessibility Zoom.
     case accessibilityZoom
 
     var id: String { rawValue }
@@ -70,62 +77,149 @@ enum ZoomBackend: String, Codable, CaseIterable, Identifiable, Hashable {
     }
 }
 
-/// Runs system / zoom / custom actions.
+struct ActionDeliveryResult: Equatable {
+    var summary: String
+    var error: String?
+    var path: String
+    var accessibilityTrusted: Bool
+    var targetApp: String?
+}
+
+/// Runs system / zoom / custom actions with reliable CGEvent delivery.
 final class ActionRunner {
     private let dock = CoreDockNotifier()
+
+    var dockAvailable: Bool { dock.isAvailable }
 
     @discardableResult
     func perform(
         _ action: MagixAction,
         parameters: ActionParameters = .empty,
-        zoomBackend: ZoomBackend
-    ) -> String {
+        zoomBackend: ZoomBackend,
+        ensureFrontmostApp: Bool = true
+    ) -> ActionDeliveryResult {
+        let axTrusted = AXIsProcessTrusted()
+        var targetName: String?
+
+        if ensureFrontmostApp, action.requiresFrontmostAppFocus {
+            targetName = Self.activateFrontmostUserApp()?.localizedName
+        }
+
+        if !axTrusted, action.requiresFrontmostAppFocus || action == .missionControl || action == .appExpose {
+            // Dock SPI may still work without AX; keyboard/scroll will not.
+            if action.requiresFrontmostAppFocus {
+                return ActionDeliveryResult(
+                    summary: action.displayTitle(parameters: parameters),
+                    error: "Accessibility not trusted for \(PermissionsHelper.runningAppBundlePath) — CGEvent posts ignored",
+                    path: "blocked",
+                    accessibilityTrusted: false,
+                    targetApp: targetName
+                )
+            }
+        }
+
+        let path: String
         switch action {
         case .missionControl:
-            if dock.send("com.apple.expose.awake") { return "CoreDock" }
-            synthesizeKey(keyCode: 126, flags: .maskControl)
-            return "keyboard ⌃↑"
+            if dock.send("com.apple.expose.awake") {
+                path = "CoreDock"
+            } else {
+                Self.synthesizeKey(keyCode: CGKeyCode(kVK_UpArrow), flags: .maskControl)
+                path = "keyboard ⌃↑"
+            }
         case .appExpose:
-            if dock.send("com.apple.expose.front.awake") { return "CoreDock" }
-            synthesizeKey(keyCode: 125, flags: .maskControl)
-            return "keyboard ⌃↓"
+            if dock.send("com.apple.expose.front.awake") {
+                path = "CoreDock"
+            } else {
+                Self.synthesizeKey(keyCode: CGKeyCode(kVK_DownArrow), flags: .maskControl)
+                path = "keyboard ⌃↓"
+            }
         case .showDesktop:
-            if dock.send("com.apple.showdesktop.awake") { return "CoreDock" }
-            // Common default: Mission Control shortcut chord isn't universal; F11 varies by keyboard.
-            synthesizeKey(keyCode: 103, flags: [])
-            return "keyboard F11"
+            if dock.send("com.apple.showdesktop.awake") {
+                path = "CoreDock"
+            } else {
+                Self.synthesizeKey(keyCode: CGKeyCode(kVK_F11), flags: [])
+                path = "keyboard F11"
+            }
         case .launchpad:
-            if dock.send("com.apple.launchpad.toggle") { return "CoreDock" }
-            return "unavailable"
+            path = dock.send("com.apple.launchpad.toggle") ? "CoreDock" : "unavailable"
         case .zoomIn:
-            return postZoom(direction: .in, backend: zoomBackend)
+            path = Self.postZoom(direction: .in, backend: zoomBackend)
         case .zoomOut:
-            return postZoom(direction: .out, backend: zoomBackend)
+            path = Self.postZoom(direction: .out, backend: zoomBackend)
         case .keyboardShortcut:
-            guard let keyCode = parameters.keyCode else { return "missing key" }
-            synthesizeKey(keyCode: CGKeyCode(keyCode), flags: parameters.keyModifiers.cgEventFlags)
-            return parameters.summary.isEmpty ? "key \(keyCode)" : parameters.summary
+            guard let keyCode = parameters.keyCode else {
+                return ActionDeliveryResult(
+                    summary: action.displayName,
+                    error: "missing key",
+                    path: "error",
+                    accessibilityTrusted: axTrusted,
+                    targetApp: targetName
+                )
+            }
+            Self.synthesizeKey(keyCode: CGKeyCode(keyCode), flags: parameters.keyModifiers.cgEventFlags)
+            path = parameters.summary.isEmpty ? "key \(keyCode)" : parameters.summary
         case .openApp:
-            guard let path = parameters.appPath, !path.isEmpty else { return "missing app" }
-            let url = URL(fileURLWithPath: path)
+            guard let appPath = parameters.appPath, !appPath.isEmpty else {
+                return ActionDeliveryResult(
+                    summary: action.displayName,
+                    error: "missing app",
+                    path: "error",
+                    accessibilityTrusted: axTrusted,
+                    targetApp: targetName
+                )
+            }
+            let url = URL(fileURLWithPath: appPath)
             let ok = NSWorkspace.shared.open(url)
-            return ok ? url.lastPathComponent : "open failed"
+            path = ok ? url.lastPathComponent : "open failed"
         case .none:
-            return "none"
+            path = "none"
         }
+
+        let error: String?
+        if path == "unavailable" || path == "open failed" {
+            error = "Action path failed: \(path)"
+        } else if !axTrusted, action.requiresFrontmostAppFocus {
+            error = "Posted without Accessibility — may be ignored"
+        } else {
+            error = nil
+        }
+
+        return ActionDeliveryResult(
+            summary: "\(action.displayTitle(parameters: parameters)) via \(path)",
+            error: error,
+            path: path,
+            accessibilityTrusted: axTrusted,
+            targetApp: targetName
+        )
+    }
+
+    /// Prefer Figma if running; otherwise the frontmost regular non-Magix app.
+    @discardableResult
+    static func activateFrontmostUserApp() -> NSRunningApplication? {
+        let magixID = Bundle.main.bundleIdentifier
+        let apps = NSWorkspace.shared.runningApplications.filter {
+            $0.activationPolicy == .regular && $0.bundleIdentifier != magixID && !$0.isTerminated
+        }
+        let figma = apps.first {
+            ($0.bundleIdentifier ?? "").localizedCaseInsensitiveContains("figma")
+        }
+        let target = figma
+            ?? apps.first { $0.isActive }
+            ?? apps.first
+        target?.activate(options: [.activateIgnoringOtherApps])
+        MagixWindowSupport.restoreAccessoryPolicyIfNeeded()
+        return target
     }
 
     private enum ZoomDirection {
         case `in`, out
     }
 
-    /// Figma ignores ⌘+scroll; it zooms on ⌘= / ⌘- (same as ⌘+ / ⌘-).
-    @discardableResult
-    private func postZoom(direction: ZoomDirection, backend: ZoomBackend) -> String {
+    private static func postZoom(direction: ZoomDirection, backend: ZoomBackend) -> String {
         switch backend {
         case .keyboardChord:
-            // ANSI US: '=' = 24, '-' = 27. ⌘= is Figma's zoom-in; ⌘- zoom-out.
-            let keyCode: CGKeyCode = (direction == .in) ? 24 : 27
+            let keyCode = CGKeyCode(direction == .in ? kVK_ANSI_Equal : kVK_ANSI_Minus)
             synthesizeKey(keyCode: keyCode, flags: .maskCommand)
             return direction == .in ? "⌘=" : "⌘-"
         case .appZoom:
@@ -137,9 +231,11 @@ final class ActionRunner {
         }
     }
 
-    private func postZoomScroll(direction: Int32, flags: CGEventFlags) {
+    private static func postZoomScroll(direction: Int32, flags: CGEventFlags) {
+        // Private source so physical ⌥ (pinch gate) is not merged into the synthetic scroll.
+        let source = CGEventSource(stateID: .privateState)
         guard let event = CGEvent(
-            scrollWheelEvent2Source: nil,
+            scrollWheelEvent2Source: source,
             units: .pixel,
             wheelCount: 1,
             wheel1: direction * 40,
@@ -147,19 +243,77 @@ final class ActionRunner {
             wheel3: 0
         ) else { return }
         event.flags = flags
-        event.post(tap: .cghidEventTap)
+        post(event)
     }
 
-    private func synthesizeKey(keyCode: CGKeyCode, flags: CGEventFlags) {
-        let source = CGEventSource(stateID: .hidSystemState)
+    /// Posts a key chord using a private event source so held physical modifiers
+    /// (especially ⌥ required for pinch) do not contaminate ⌘=/⌘-.
+    static func synthesizeKey(keyCode: CGKeyCode, flags: CGEventFlags) {
+        let source = CGEventSource(stateID: .privateState)
+        source?.localEventsSuppressionInterval = 0
+
+        // Explicitly release common physical modifiers that are NOT part of the chord.
+        let physicalReleases = interferingModifierKeyUps(desiredFlags: flags)
+        for up in physicalReleases {
+            post(up)
+        }
+
         guard
             let down = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: true),
             let up = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: false)
         else { return }
         down.flags = flags
         up.flags = flags
-        down.post(tap: .cghidEventTap)
-        up.post(tap: .cghidEventTap)
+        post(down)
+        post(up)
+
+        // Re-assert desired modifier key-ups so we don't leave synthetic ⌘ stuck down.
+        for key in modifierKeyCodes(in: flags) {
+            if let modUp = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: false) {
+                modUp.flags = []
+                post(modUp)
+            }
+        }
+    }
+
+    private static func interferingModifierKeyUps(desiredFlags: CGEventFlags) -> [CGEvent] {
+        let source = CGEventSource(stateID: .privateState)
+        var events: [CGEvent] = []
+        let candidates: [(CGEventFlags, CGKeyCode)] = [
+            (.maskAlternate, CGKeyCode(kVK_Option)),
+            (.maskAlternate, CGKeyCode(kVK_RightOption)),
+            (.maskShift, CGKeyCode(kVK_Shift)),
+            (.maskShift, CGKeyCode(kVK_RightShift)),
+            (.maskControl, CGKeyCode(kVK_Control)),
+            (.maskControl, CGKeyCode(kVK_RightControl)),
+            (.maskCommand, CGKeyCode(kVK_Command)),
+            (.maskCommand, CGKeyCode(kVK_RightCommand)),
+        ]
+        for (flag, code) in candidates {
+            // Release modifiers that are currently not intended for this chord.
+            if !desiredFlags.contains(flag) {
+                if let up = CGEvent(keyboardEventSource: source, virtualKey: code, keyDown: false) {
+                    up.flags = []
+                    events.append(up)
+                }
+            }
+        }
+        return events
+    }
+
+    private static func modifierKeyCodes(in flags: CGEventFlags) -> [CGKeyCode] {
+        var codes: [CGKeyCode] = []
+        if flags.contains(.maskCommand) { codes.append(CGKeyCode(kVK_Command)) }
+        if flags.contains(.maskAlternate) { codes.append(CGKeyCode(kVK_Option)) }
+        if flags.contains(.maskControl) { codes.append(CGKeyCode(kVK_Control)) }
+        if flags.contains(.maskShift) { codes.append(CGKeyCode(kVK_Shift)) }
+        return codes
+    }
+
+    private static func post(_ event: CGEvent) {
+        // HID + session taps: some apps only see one of them for synthetic input.
+        event.post(tap: .cghidEventTap)
+        event.post(tap: .cgSessionEventTap)
     }
 }
 
@@ -186,6 +340,8 @@ final class CoreDockNotifier {
         #endif
     }
 
+    var isAvailable: Bool { sendFn != nil }
+
     @discardableResult
     func send(_ name: String) -> Bool {
         guard let sendFn else { return false }
@@ -208,7 +364,6 @@ final class CoreDockNotifier {
     }
 }
 
-/// Common keys for the shortcut picker.
 enum ShortcutKeyCatalog {
     struct Item: Identifiable, Hashable {
         var id: UInt16 { keyCode }
@@ -230,6 +385,8 @@ enum ShortcutKeyCatalog {
             Item(keyCode: 21, label: "4"), Item(keyCode: 23, label: "5"), Item(keyCode: 22, label: "6"),
             Item(keyCode: 26, label: "7"), Item(keyCode: 28, label: "8"), Item(keyCode: 25, label: "9"),
             Item(keyCode: 29, label: "0"),
+            Item(keyCode: UInt16(kVK_ANSI_Equal), label: "="),
+            Item(keyCode: UInt16(kVK_ANSI_Minus), label: "-"),
             Item(keyCode: 49, label: "Space"), Item(keyCode: 36, label: "Return"),
             Item(keyCode: 48, label: "Tab"), Item(keyCode: 53, label: "Esc"),
             Item(keyCode: 123, label: "←"), Item(keyCode: 124, label: "→"),

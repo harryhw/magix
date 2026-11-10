@@ -46,6 +46,8 @@ final class GestureEngine: MultitouchFrameSink {
 
     private(set) var lastRecognized: String = "—"
     private(set) var lastActionResult: String = "—"
+    private(set) var lastActionError: String = "—"
+    private(set) var lastDeliveryPath: String = "—"
 
     var probeSummary: String { bridge.probeSummary() }
     var frameCount: UInt64 { bridge.frameCount }
@@ -54,6 +56,7 @@ final class GestureEngine: MultitouchFrameSink {
     var eventTapError: String? { eventTap.lastError }
     var multitouchError: String? { bridge.lastError }
     var discoveredDevices: [MultitouchDeviceInfo] { bridge.discoveredDevices }
+    var dockSPIAvailable: Bool { actions.dockAvailable }
 
     init(config: MagixConfig) {
         self.config = config
@@ -83,6 +86,7 @@ final class GestureEngine: MultitouchFrameSink {
         }
 
         lastRecognized = "Listening…"
+        lastActionError = "—"
         return .running
     }
 
@@ -101,11 +105,14 @@ final class GestureEngine: MultitouchFrameSink {
 
     @discardableResult
     func debugPerform(_ action: MagixAction, parameters: ActionParameters = .empty) -> String {
-        eventTap.beginSuppressing(duration: 0.4)
-        let result = actions.perform(action, parameters: parameters, zoomBackend: config.zoomBackend)
-        lastRecognized = "Debug \(action.displayName)"
-        lastActionResult = "\(action.displayTitle(parameters: parameters)) via \(result)"
-        return lastActionResult
+        // Same delivery path as live gestures.
+        let result = deliver(
+            action: action,
+            parameters: parameters,
+            recognizedLabel: "Debug \(action.displayName)",
+            ensureFrontmostApp: true
+        )
+        return result.summary
     }
 
     func debugInjectSwipe(up: Bool) {
@@ -150,18 +157,35 @@ final class GestureEngine: MultitouchFrameSink {
         guard active else { return }
         guard frame.isLikelyMagicMouse || !config.magicMouseOnly else { return }
 
+        let recognized: RecognizedGesture?
         if let swipe = swipeRecognizer.process(frame: frame) {
-            handle(gesture: swipe)
-            return
+            recognized = swipe
+        } else if config.enableSoftwarePinch, let pinch = pinchRecognizer.process(frame: frame) {
+            recognized = pinch
+        } else {
+            recognized = nil
         }
 
-        if config.enableSoftwarePinch, let pinch = pinchRecognizer.process(frame: frame) {
-            handle(gesture: pinch)
+        guard let gesture = recognized else { return }
+
+        // Multitouch callbacks often arrive off the main thread — deliver actions on main.
+        if Thread.isMainThread {
+            handle(gesture: gesture)
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.handle(gesture: gesture)
+            }
         }
     }
 
     private func handle(gesture: RecognizedGesture) {
-        guard let binding = config.binding(for: gesture) else { return }
+        guard let binding = config.binding(for: gesture) else {
+            lastRecognized = label(for: gesture)
+            lastActionResult = "No enabled mapping"
+            lastActionError = "Add/enable a mapping for \(label(for: gesture)) in Gestures"
+            lastDeliveryPath = "skipped"
+            return
+        }
 
         let requiresModifier = binding.requiresModifier
             || (config.requireModifiersForTemplates && binding.gestureKind.isModifierGatedTemplateKind)
@@ -169,6 +193,9 @@ final class GestureEngine: MultitouchFrameSink {
             let required = binding.requiredModifiers.isEmpty ? ModifierSet([.option]) : binding.requiredModifiers
             if !modifierChecker.isSatisfied(required) {
                 lastRecognized = "\(label(for: gesture)) (hold \(required.displayName))"
+                lastActionResult = "Blocked — modifier"
+                lastActionError = "Hold \(required.displayName) while gesturing"
+                lastDeliveryPath = "blocked"
                 return
             }
         }
@@ -178,16 +205,45 @@ final class GestureEngine: MultitouchFrameSink {
             return
         }
         lastActionAt = now
-        lastRecognized = label(for: gesture)
 
         eventTap.beginSuppressing(duration: 0.5)
-        let result = actions.perform(
-            binding.action,
+        _ = deliver(
+            action: binding.action,
             parameters: binding.parameters,
-            zoomBackend: config.zoomBackend
+            recognizedLabel: label(for: gesture),
+            ensureFrontmostApp: true
         )
-        lastActionResult = "\(binding.action.displayTitle(parameters: binding.parameters)) via \(result)"
-        NSLog("[Magix] Gesture %@ → %@ (%@)", lastRecognized, lastActionResult, result)
+    }
+
+    @discardableResult
+    private func deliver(
+        action: MagixAction,
+        parameters: ActionParameters,
+        recognizedLabel: String,
+        ensureFrontmostApp: Bool
+    ) -> ActionDeliveryResult {
+        let result = actions.perform(
+            action,
+            parameters: parameters,
+            zoomBackend: config.zoomBackend,
+            ensureFrontmostApp: ensureFrontmostApp
+        )
+        lastRecognized = recognizedLabel
+        lastActionResult = result.summary
+        if let target = result.targetApp {
+            lastActionResult += " → \(target)"
+        }
+        lastActionError = result.error ?? "—"
+        lastDeliveryPath = result.path
+        NSLog(
+            "[Magix] %@ → %@ path=%@ ax=%@ error=%@",
+            recognizedLabel,
+            result.summary,
+            result.path,
+            result.accessibilityTrusted ? "yes" : "NO",
+            result.error ?? "none"
+        )
+        return result
     }
 
     private func label(for gesture: RecognizedGesture) -> String {

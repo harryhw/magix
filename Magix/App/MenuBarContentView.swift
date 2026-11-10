@@ -51,7 +51,9 @@ struct MenuBarContentView: View {
     private var secondaryStatusLine: String {
         let last = appModel.lastRecognized.trimmingCharacters(in: .whitespacesAndNewlines)
         let lastPart = (last.isEmpty || last == "—") ? "none" : last
-        return "Frames: \(appModel.frameCount) · Last: \(lastPart)"
+        let action = appModel.lastActionResult
+        let actionPart = (action.isEmpty || action == "—") ? "none" : action
+        return "Frames: \(appModel.frameCount) · \(lastPart) · \(actionPart)"
     }
 
     private func openMagixWindow(id: String) {
