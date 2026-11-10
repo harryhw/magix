@@ -8,7 +8,7 @@ struct PermissionsOnboardingView: View {
             Text("Magix needs permissions")
                 .font(.title2.weight(.semibold))
 
-            Text("Gesture capture uses Accessibility (and may need Input Monitoring) so Magix can read Magic Mouse multitouch and suppress conflicting scroll when a gesture is consumed.")
+            Text("Accessibility is required for the scroll event tap and synthetic actions. Input Monitoring is required on modern macOS for Magic Mouse MultitouchSupport contact frames.")
                 .foregroundStyle(.secondary)
 
             GroupBox("Checklist") {
@@ -29,10 +29,17 @@ struct PermissionsOnboardingView: View {
                 .padding(4)
             }
 
+            Text("After enabling Magix in both lists, quit and reopen the app once if frames stay at 0.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
             HStack {
+                Button("Request prompts") {
+                    appModel.permissions.requestAllPrompts()
+                    appModel.refreshPermissions()
+                }
                 Button("Refresh") {
                     appModel.refreshPermissions()
-                    _ = appModel.permissions.requestAccessibilityPromptIfNeeded()
                 }
                 Spacer()
                 if appModel.permissionsStatus.isReady {
@@ -47,7 +54,7 @@ struct PermissionsOnboardingView: View {
         .padding(24)
         .onAppear {
             appModel.refreshPermissions()
-            _ = appModel.permissions.requestAccessibilityPromptIfNeeded()
+            appModel.permissions.requestAllPrompts()
         }
     }
 

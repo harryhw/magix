@@ -11,10 +11,13 @@ struct SettingsView: View {
             GesturesSettingsTab(appModel: appModel)
                 .tabItem { Label("Gestures", systemImage: "hand.draw") }
 
+            StatusSettingsTab(appModel: appModel)
+                .tabItem { Label("Status", systemImage: "waveform.path.ecg") }
+
             PermissionsSettingsTab(appModel: appModel)
                 .tabItem { Label("Permissions", systemImage: "lock.shield") }
         }
-        .frame(width: 480, height: 360)
+        .frame(width: 520, height: 400)
     }
 }
 
@@ -105,13 +108,54 @@ private struct GesturesSettingsTab: View {
                         appModel.updateConfig(next)
                     }
                 ))
-                Text("Templates default to modifier-gated so normal 2-finger scroll stays usable.")
+                Text("Pinch/zoom templates stay modifier-gated (⌥ by default) so normal 2-finger scroll remains usable.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
         .padding()
+    }
+}
+
+private struct StatusSettingsTab: View {
+    @ObservedObject var appModel: AppModel
+
+    var body: some View {
+        Form {
+            Section("Engine") {
+                LabeledContent("Status", value: appModel.engineStatus.menuLabel)
+                LabeledContent("Frames received", value: "\(appModel.frameCount)")
+                LabeledContent("Last gesture", value: appModel.lastRecognized)
+                LabeledContent("Last action", value: appModel.lastActionResult)
+            }
+
+            Section("Multitouch probe") {
+                Text(appModel.probeSummary)
+                    .font(.caption)
+                    .textSelection(.enabled)
+                Button("Refresh probe") {
+                    appModel.refreshProbe()
+                    appModel.refreshPermissions()
+                }
+            }
+
+            Section("Manual test (no Multitouch required)") {
+                Text("These fire action runners / synthetic recognizer frames to verify the stack before permissions unlock live mouse frames.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Button("Test Mission Control") { appModel.debugMissionControl() }
+                Button("Test App Exposé") { appModel.debugAppExpose() }
+                Button("Inject synthetic swipe up") { appModel.debugInjectSwipeUp() }
+                Button("Inject synthetic swipe down") { appModel.debugInjectSwipeDown() }
+            }
+        }
+        .formStyle(.grouped)
+        .padding()
+        .onAppear {
+            appModel.refreshProbe()
+            appModel.refreshPermissions()
+        }
     }
 }
 
@@ -127,13 +171,20 @@ private struct PermissionsSettingsTab: View {
                         .foregroundStyle(appModel.permissionsStatus.accessibilityGranted ? .green : .orange)
                 }
                 LabeledContent("Input Monitoring") {
-                    Text(appModel.permissionsStatus.inputMonitoringGranted ? "Granted" : "Check if needed")
-                        .foregroundStyle(appModel.permissionsStatus.inputMonitoringGranted ? .green : .secondary)
+                    Text(inputMonitoringLabel)
+                        .foregroundStyle(appModel.permissionsStatus.inputMonitoringGranted ? .green : .orange)
                 }
+                Text(appModel.permissionsStatus.statusSummary)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section {
                 Button("Refresh status") {
+                    appModel.refreshPermissions()
+                }
+                Button("Request prompts…") {
+                    appModel.permissions.requestAllPrompts()
                     appModel.refreshPermissions()
                 }
                 Button("Open permissions guide…") {
@@ -150,6 +201,12 @@ private struct PermissionsSettingsTab: View {
         .formStyle(.grouped)
         .padding()
         .onAppear { appModel.refreshPermissions() }
+    }
+
+    private var inputMonitoringLabel: String {
+        if appModel.permissionsStatus.inputMonitoringGranted { return "Granted" }
+        if appModel.permissionsStatus.inputMonitoringUnknown { return "Not determined" }
+        return "Denied"
     }
 }
 

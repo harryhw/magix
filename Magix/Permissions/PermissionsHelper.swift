@@ -6,26 +6,58 @@ import IOKit.hid
 struct PermissionsStatus: Equatable {
     var accessibilityGranted: Bool
     var inputMonitoringGranted: Bool
+    var inputMonitoringUnknown: Bool
 
-    /// MVP: Accessibility is required. Input Monitoring is surfaced but not yet a hard gate
-    /// until MultitouchSupport probing proves it is mandatory on Harry's OS build.
-    var isReady: Bool { accessibilityGranted }
+    /// Engine requires Accessibility. Input Monitoring must not be explicitly denied;
+    /// unknown is allowed but we keep prompting until granted for reliable Multitouch frames.
+    var isReady: Bool {
+        accessibilityGranted && (inputMonitoringGranted || inputMonitoringUnknown)
+    }
+
+    var blocksEngine: Bool {
+        !accessibilityGranted || (!inputMonitoringGranted && !inputMonitoringUnknown)
+    }
+
+    var statusSummary: String {
+        if accessibilityGranted && inputMonitoringGranted {
+            return "Permissions OK"
+        }
+        var missing: [String] = []
+        if !accessibilityGranted { missing.append("Accessibility") }
+        if !inputMonitoringGranted { missing.append("Input Monitoring") }
+        return "Missing: " + missing.joined(separator: ", ")
+    }
 }
 
 struct PermissionsHelper {
     func currentStatus() -> PermissionsStatus {
-        PermissionsStatus(
+        let access = IOHIDCheckAccess(kIOHIDRequestTypeListenEvent)
+        let granted = access == kIOHIDAccessTypeGranted
+        let denied = access == kIOHIDAccessTypeDenied
+        return PermissionsStatus(
             accessibilityGranted: AXIsProcessTrusted(),
-            inputMonitoringGranted: Self.isInputMonitoringGranted()
+            inputMonitoringGranted: granted,
+            inputMonitoringUnknown: !granted && !denied
         )
     }
 
-    /// Triggers the system Accessibility trust prompt when possible.
     @discardableResult
     func requestAccessibilityPromptIfNeeded() -> Bool {
         if AXIsProcessTrusted() { return true }
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
         return AXIsProcessTrustedWithOptions(options)
+    }
+
+    @discardableResult
+    func requestInputMonitoringIfNeeded() -> Bool {
+        let status = IOHIDCheckAccess(kIOHIDRequestTypeListenEvent)
+        if status == kIOHIDAccessTypeGranted { return true }
+        return IOHIDRequestAccess(kIOHIDRequestTypeListenEvent)
+    }
+
+    func requestAllPrompts() {
+        _ = requestAccessibilityPromptIfNeeded()
+        _ = requestInputMonitoringIfNeeded()
     }
 
     static func openAccessibilitySettings() {
@@ -43,17 +75,5 @@ struct PermissionsHelper {
     private static func openURL(_ string: String) {
         guard let url = URL(string: string) else { return }
         NSWorkspace.shared.open(url)
-    }
-
-    /// Best-effort Input Monitoring probe via IOHID.
-    private static func isInputMonitoringGranted() -> Bool {
-        IOHIDCheckAccess(kIOHIDRequestTypeListenEvent) == kIOHIDAccessTypeGranted
-    }
-
-    /// Optional prompt path for Input Monitoring (call when Multitouch path needs it).
-    @discardableResult
-    static func requestInputMonitoringIfNeeded() -> Bool {
-        if isInputMonitoringGranted() { return true }
-        return IOHIDRequestAccess(kIOHIDRequestTypeListenEvent)
     }
 }

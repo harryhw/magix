@@ -16,12 +16,29 @@ struct MenuBarContentView: View {
 
             Divider()
 
-            statusRow
+            Group {
+                Text("Status: \(appModel.engineStatus.menuLabel)")
+                Text(appModel.permissionsStatus.statusSummary)
+                Text("Frames: \(appModel.frameCount)")
+                Text("Last gesture: \(appModel.lastRecognized)")
+                Text("Last action: \(appModel.lastActionResult)")
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 2)
+
+            Divider()
 
             if !appModel.permissionsStatus.isReady {
                 Button("Fix Permissions…") {
                     openWindow(id: "permissions")
                 }
+            }
+
+            Button("Refresh probe") {
+                appModel.refreshProbe()
+                appModel.refreshPermissions()
             }
 
             Button("Settings…") {
@@ -36,28 +53,9 @@ struct MenuBarContentView: View {
             }
             .keyboardShortcut("q", modifiers: .command)
         }
-        .frame(minWidth: 220)
+        .frame(minWidth: 260)
         .onAppear {
             appModel.refreshPermissions()
         }
-    }
-
-    @ViewBuilder
-    private var statusRow: some View {
-        let text: String = {
-            switch appModel.engineStatus {
-            case .idle: return "Status: Idle"
-            case .running: return "Status: Running"
-            case .disabled: return "Status: Disabled"
-            case .needsPermissions: return "Status: Needs permissions"
-            case .error(let message): return "Status: \(message)"
-            }
-        }()
-
-        Text(text)
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
     }
 }

@@ -63,8 +63,8 @@ struct MagixConfig: Codable, Equatable {
         requireModifiersForTemplates: true,
         enableSoftwarePinch: true,
         magicMouseOnly: true,
-        swipeThreshold: 0.18,
-        pinchThreshold: 0.06
+        swipeThreshold: 0.12,
+        pinchThreshold: 0.05
     )
 
     /// MVP fixed bindings: swipes fire without modifiers; pinch/zoom templates are modifier-gated.
