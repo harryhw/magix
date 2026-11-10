@@ -7,6 +7,8 @@ struct PermissionsOnboardingView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Magix needs permissions")
                 .font(.title2.weight(.semibold))
+                .onAppear { MagixWindowSupport.bringToFrontForWindow() }
+                .onDisappear { MagixWindowSupport.restoreAccessoryPolicyIfNeeded() }
 
             Text("Accessibility is required for the scroll event tap and synthetic actions. Input Monitoring is required on modern macOS for Magic Mouse MultitouchSupport contact frames.")
                 .foregroundStyle(.secondary)

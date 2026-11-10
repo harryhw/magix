@@ -10,10 +10,15 @@ struct MagixApp: App {
         } label: {
             Label("Magix", systemImage: appModel.menuBarSymbolName)
         }
+        .menuBarExtraStyle(.menu)
 
-        Settings {
+        // Explicit Window scene — more reliable than SwiftUI `Settings` for LSUIElement apps.
+        Window("Magix Settings", id: "settings") {
             SettingsView(appModel: appModel)
+                .frame(minWidth: 520, minHeight: 400)
         }
+        .defaultSize(width: 520, height: 420)
+        .windowResizability(.contentSize)
 
         Window("Magix Permissions", id: "permissions") {
             PermissionsOnboardingView(appModel: appModel)

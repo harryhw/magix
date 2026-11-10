@@ -12,6 +12,7 @@
 		B20000000000000000000004 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* SettingsView.swift */; };
 		B20000000000000000000005 /* PermissionsOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* PermissionsOnboardingView.swift */; };
 		B20000000000000000000006 /* LaunchAtLoginController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* LaunchAtLoginController.swift */; };
+		B20000000000000000000022 /* MagixWindowSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000022 /* MagixWindowSupport.swift */; };
 		B20000000000000000000007 /* PermissionsHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* PermissionsHelper.swift */; };
 		B20000000000000000000008 /* MultitouchSupportBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* MultitouchSupportBridge.swift */; };
 		B20000000000000000000009 /* GestureEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* GestureEngine.swift */; };
@@ -32,6 +33,7 @@
 		A20000000000000000000004 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A20000000000000000000005 /* PermissionsOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsOnboardingView.swift; sourceTree = "<group>"; };
 		A20000000000000000000006 /* LaunchAtLoginController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginController.swift; sourceTree = "<group>"; };
+		A20000000000000000000022 /* MagixWindowSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MagixWindowSupport.swift; sourceTree = "<group>"; };
 		A20000000000000000000007 /* PermissionsHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsHelper.swift; sourceTree = "<group>"; };
 		A20000000000000000000008 /* MultitouchSupportBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultitouchSupportBridge.swift; sourceTree = "<group>"; };
 		A20000000000000000000009 /* GestureEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GestureEngine.swift; sourceTree = "<group>"; };
@@ -97,6 +99,7 @@
 				A20000000000000000000004 /* SettingsView.swift */,
 				A20000000000000000000005 /* PermissionsOnboardingView.swift */,
 				A20000000000000000000006 /* LaunchAtLoginController.swift */,
+				A20000000000000000000022 /* MagixWindowSupport.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -236,6 +239,7 @@
 				B20000000000000000000004 /* SettingsView.swift in Sources */,
 				B20000000000000000000005 /* PermissionsOnboardingView.swift in Sources */,
 				B20000000000000000000006 /* LaunchAtLoginController.swift in Sources */,
+				B20000000000000000000022 /* MagixWindowSupport.swift in Sources */,
 				B20000000000000000000007 /* PermissionsHelper.swift in Sources */,
 				B20000000000000000000008 /* MultitouchSupportBridge.swift in Sources */,
 				B20000000000000000000009 /* GestureEngine.swift in Sources */,

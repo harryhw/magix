@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct SettingsView: View {
@@ -17,7 +18,13 @@ struct SettingsView: View {
             PermissionsSettingsTab(appModel: appModel)
                 .tabItem { Label("Permissions", systemImage: "lock.shield") }
         }
-        .frame(width: 520, height: 400)
+        .frame(minWidth: 520, minHeight: 400)
+        .onAppear {
+            MagixWindowSupport.bringToFrontForWindow()
+        }
+        .onDisappear {
+            MagixWindowSupport.restoreAccessoryPolicyIfNeeded()
+        }
     }
 }
 
@@ -188,6 +195,7 @@ private struct PermissionsSettingsTab: View {
                     appModel.refreshPermissions()
                 }
                 Button("Open permissions guide…") {
+                    MagixWindowSupport.bringToFrontForWindow()
                     openWindow(id: "permissions")
                 }
                 Button("Open System Settings → Accessibility") {

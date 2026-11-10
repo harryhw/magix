@@ -26,6 +26,8 @@ open build/Build/Products/Debug/Magix.app
 In Xcode: select **Magix** scheme → set your **Team** under Signing → Run.  
 The app is `LSUIElement` — menu bar only, no Dock icon.
 
+**Open Settings:** click the Magix menu-bar icon → **Settings…**. That opens a real “Magix Settings” window (not the fragile SwiftUI `Settings` scene).
+
 ---
 
 ## First-run permissions (required)

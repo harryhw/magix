@@ -1,9 +1,9 @@
+import AppKit
 import SwiftUI
 
 struct MenuBarContentView: View {
     @ObservedObject var appModel: AppModel
     @Environment(\.openWindow) private var openWindow
-    @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -32,7 +32,7 @@ struct MenuBarContentView: View {
 
             if !appModel.permissionsStatus.isReady {
                 Button("Fix Permissions…") {
-                    openWindow(id: "permissions")
+                    openMagixWindow(id: "permissions")
                 }
             }
 
@@ -42,7 +42,7 @@ struct MenuBarContentView: View {
             }
 
             Button("Settings…") {
-                openSettings()
+                openMagixWindow(id: "settings")
             }
             .keyboardShortcut(",", modifiers: .command)
 
@@ -56,6 +56,23 @@ struct MenuBarContentView: View {
         .frame(minWidth: 260)
         .onAppear {
             appModel.refreshPermissions()
+        }
+    }
+
+    private func openMagixWindow(id: String) {
+        MagixWindowSupport.bringToFrontForWindow()
+        openWindow(id: id)
+
+        // Ensure the matching NSWindow becomes key after SwiftUI creates/shows it.
+        DispatchQueue.main.async {
+            MagixWindowSupport.bringToFrontForWindow()
+            if let window = NSApp.windows.first(where: { $0.identifier?.rawValue == id || $0.title.contains(id == "settings" ? "Settings" : "Permissions") }) {
+                window.makeKeyAndOrderFront(nil)
+            } else {
+                NSApp.windows
+                    .filter(\.isVisible)
+                    .forEach { $0.makeKeyAndOrderFront(nil) }
+            }
         }
     }
 }
