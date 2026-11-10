@@ -1,0 +1,362 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B20000000000000000000001 /* MagixApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* MagixApp.swift */; };
+		B20000000000000000000002 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* AppModel.swift */; };
+		B20000000000000000000003 /* MenuBarContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* MenuBarContentView.swift */; };
+		B20000000000000000000004 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* SettingsView.swift */; };
+		B20000000000000000000005 /* PermissionsOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* PermissionsOnboardingView.swift */; };
+		B20000000000000000000006 /* LaunchAtLoginController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* LaunchAtLoginController.swift */; };
+		B20000000000000000000007 /* PermissionsHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* PermissionsHelper.swift */; };
+		B20000000000000000000008 /* MultitouchSupportBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* MultitouchSupportBridge.swift */; };
+		B20000000000000000000009 /* GestureEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* GestureEngine.swift */; };
+		B2000000000000000000000A /* TwoFingerSwipeRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000A /* TwoFingerSwipeRecognizer.swift */; };
+		B2000000000000000000000B /* SoftwarePinchRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000B /* SoftwarePinchRecognizer.swift */; };
+		B2000000000000000000000C /* ModifierGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000C /* ModifierGate.swift */; };
+		B2000000000000000000000D /* ScrollEventTap.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000D /* ScrollEventTap.swift */; };
+		B2000000000000000000000E /* ActionRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000E /* ActionRunner.swift */; };
+		B2000000000000000000000F /* MagixConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000F /* MagixConfig.swift */; };
+		B20000000000000000000010 /* GestureTemplateCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* GestureTemplateCatalog.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A10000000000000000000006 /* Magix.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Magix.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000001 /* MagixApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MagixApp.swift; sourceTree = "<group>"; };
+		A20000000000000000000002 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		A20000000000000000000003 /* MenuBarContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarContentView.swift; sourceTree = "<group>"; };
+		A20000000000000000000004 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A20000000000000000000005 /* PermissionsOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsOnboardingView.swift; sourceTree = "<group>"; };
+		A20000000000000000000006 /* LaunchAtLoginController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginController.swift; sourceTree = "<group>"; };
+		A20000000000000000000007 /* PermissionsHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsHelper.swift; sourceTree = "<group>"; };
+		A20000000000000000000008 /* MultitouchSupportBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultitouchSupportBridge.swift; sourceTree = "<group>"; };
+		A20000000000000000000009 /* GestureEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GestureEngine.swift; sourceTree = "<group>"; };
+		A2000000000000000000000A /* TwoFingerSwipeRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwoFingerSwipeRecognizer.swift; sourceTree = "<group>"; };
+		A2000000000000000000000B /* SoftwarePinchRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwarePinchRecognizer.swift; sourceTree = "<group>"; };
+		A2000000000000000000000C /* ModifierGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModifierGate.swift; sourceTree = "<group>"; };
+		A2000000000000000000000D /* ScrollEventTap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollEventTap.swift; sourceTree = "<group>"; };
+		A2000000000000000000000E /* ActionRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionRunner.swift; sourceTree = "<group>"; };
+		A2000000000000000000000F /* MagixConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MagixConfig.swift; sourceTree = "<group>"; };
+		A20000000000000000000010 /* GestureTemplateCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GestureTemplateCatalog.swift; sourceTree = "<group>"; };
+		A20000000000000000000020 /* Magix.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Magix.entitlements; sourceTree = "<group>"; };
+		A20000000000000000000021 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A10000000000000000000005 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A10000000000000000000007 = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000008 /* Magix */,
+				A10000000000000000000011 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A10000000000000000000011 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000006 /* Magix.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000008 /* Magix */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000001 /* MagixApp.swift */,
+				A10000000000000000000009 /* App */,
+				A1000000000000000000000A /* Permissions */,
+				A1000000000000000000000B /* Multitouch */,
+				A1000000000000000000000C /* GestureEngine */,
+				A1000000000000000000000D /* EventTap */,
+				A1000000000000000000000E /* Actions */,
+				A1000000000000000000000F /* Config */,
+				A10000000000000000000010 /* Resources */,
+			);
+			path = Magix;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000009 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000002 /* AppModel.swift */,
+				A20000000000000000000003 /* MenuBarContentView.swift */,
+				A20000000000000000000004 /* SettingsView.swift */,
+				A20000000000000000000005 /* PermissionsOnboardingView.swift */,
+				A20000000000000000000006 /* LaunchAtLoginController.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		A1000000000000000000000A /* Permissions */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000007 /* PermissionsHelper.swift */,
+			);
+			path = Permissions;
+			sourceTree = "<group>";
+		};
+		A1000000000000000000000B /* Multitouch */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000008 /* MultitouchSupportBridge.swift */,
+			);
+			path = Multitouch;
+			sourceTree = "<group>";
+		};
+		A1000000000000000000000C /* GestureEngine */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000009 /* GestureEngine.swift */,
+				A2000000000000000000000A /* TwoFingerSwipeRecognizer.swift */,
+				A2000000000000000000000B /* SoftwarePinchRecognizer.swift */,
+				A2000000000000000000000C /* ModifierGate.swift */,
+			);
+			path = GestureEngine;
+			sourceTree = "<group>";
+		};
+		A1000000000000000000000D /* EventTap */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000000D /* ScrollEventTap.swift */,
+			);
+			path = EventTap;
+			sourceTree = "<group>";
+		};
+		A1000000000000000000000E /* Actions */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000000E /* ActionRunner.swift */,
+			);
+			path = Actions;
+			sourceTree = "<group>";
+		};
+		A1000000000000000000000F /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000000F /* MagixConfig.swift */,
+				A20000000000000000000010 /* GestureTemplateCatalog.swift */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000010 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000021 /* Info.plist */,
+				A20000000000000000000020 /* Magix.entitlements */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A10000000000000000000002 /* Magix */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A10000000000000000000013 /* Build configuration list for PBXNativeTarget "Magix" */;
+			buildPhases = (
+				A10000000000000000000003 /* Sources */,
+				A10000000000000000000005 /* Frameworks */,
+				A10000000000000000000004 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Magix;
+			productName = Magix;
+			productReference = A10000000000000000000006 /* Magix.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A10000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					A10000000000000000000002 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = A10000000000000000000012 /* Build configuration list for PBXProject "Magix" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A10000000000000000000007;
+			productRefGroup = A10000000000000000000011 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A10000000000000000000002 /* Magix */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A10000000000000000000004 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A10000000000000000000003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B20000000000000000000001 /* MagixApp.swift in Sources */,
+				B20000000000000000000002 /* AppModel.swift in Sources */,
+				B20000000000000000000003 /* MenuBarContentView.swift in Sources */,
+				B20000000000000000000004 /* SettingsView.swift in Sources */,
+				B20000000000000000000005 /* PermissionsOnboardingView.swift in Sources */,
+				B20000000000000000000006 /* LaunchAtLoginController.swift in Sources */,
+				B20000000000000000000007 /* PermissionsHelper.swift in Sources */,
+				B20000000000000000000008 /* MultitouchSupportBridge.swift in Sources */,
+				B20000000000000000000009 /* GestureEngine.swift in Sources */,
+				B2000000000000000000000A /* TwoFingerSwipeRecognizer.swift in Sources */,
+				B2000000000000000000000B /* SoftwarePinchRecognizer.swift in Sources */,
+				B2000000000000000000000C /* ModifierGate.swift in Sources */,
+				B2000000000000000000000D /* ScrollEventTap.swift in Sources */,
+				B2000000000000000000000E /* ActionRunner.swift in Sources */,
+				B2000000000000000000000F /* MagixConfig.swift in Sources */,
+				B20000000000000000000010 /* GestureTemplateCatalog.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A10000000000000000000014 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A10000000000000000000015 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		A10000000000000000000016 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Magix/Resources/Magix.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Magix/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.harryhuang.magix;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A10000000000000000000017 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Magix/Resources/Magix.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Magix/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.harryhuang.magix;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A10000000000000000000012 /* Build configuration list for PBXProject "Magix" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000000014 /* Debug */,
+				A10000000000000000000015 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A10000000000000000000013 /* Build configuration list for PBXNativeTarget "Magix" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000000016 /* Debug */,
+				A10000000000000000000017 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A10000000000000000000001 /* Project object */;
+}

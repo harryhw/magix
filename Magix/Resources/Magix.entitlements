@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Scaffold entitlements. Keep minimal for Developer ID + notarization later.
+	     Do NOT enable App Sandbox — CGEventTap + MultitouchSupport need out-of-sandbox access.
+	     Harry has a Developer ID cert; wire CODE_SIGN_IDENTITY in Xcode locally (do not invent). -->
+	<key>com.apple.security.app-sandbox</key>
+	<false/>
+</dict>
+</plist>

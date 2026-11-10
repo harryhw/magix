@@ -1,0 +1,38 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcuserdata/
+xcuserdata/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift / SPM
+.swiftpm/
+.build/
+Packages/
+Package.resolved
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Signing / secrets (never commit)
+*.p12
+*.cer
+*.mobileprovision
+AuthKey_*.p8
+notary-credentials*
+.env
+.env.*
+
+# Archives / distribution
+*.xcarchive
+dist/
+release/
+*.dmg
+*.zip
+!docs/**/*.zip
