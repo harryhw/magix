@@ -2,8 +2,9 @@
 
 **Project:** Magix  
 **For:** Harry Huang  
-**Updated:** 2026-11-10 (custom gestures + Settings UX)  
-**On-disk path:** `/Users/hoanghai/projects/magix`
+**Updated:** 2026-11-10 (AppIcon + Release DMG + GitHub publish)  
+**On-disk path:** `/Users/hoanghai/projects/magix`  
+**Remote:** `https://github.com/harryhw/magix`
 
 ## Goals
 
@@ -22,7 +23,8 @@
 | Mission Control / Exposé / Desktop / Launchpad | CoreDock + keyboard fallbacks |
 | Zoom | Default **⌘= / ⌘-** (Figma); optional ⌘+scroll / ⌃+scroll |
 | Templates | Modifier-gated by default (⌥) |
-| Repo | Local only at `/Users/hoanghai/projects/magix` |
+| Repo | `https://github.com/harryhw/magix` (prefer private) |
+| v0.1.0 signing | Ad-hoc only — not Developer ID / not notarized |
 
 ## What Harry can use now
 

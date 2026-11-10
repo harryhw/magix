@@ -8,11 +8,10 @@ struct MagixApp: App {
         MenuBarExtra {
             MenuBarContentView(appModel: appModel)
         } label: {
-            Label("Magix", systemImage: appModel.menuBarSymbolName)
+            menuBarLabel
         }
         .menuBarExtraStyle(.menu)
 
-        // Explicit Window scene — more reliable than SwiftUI `Settings` for LSUIElement apps.
         Window("Magix Settings", id: "settings") {
             SettingsView(appModel: appModel)
                 .frame(minWidth: 520, minHeight: 400)
@@ -25,5 +24,23 @@ struct MagixApp: App {
                 .frame(minWidth: 420, minHeight: 320)
         }
         .windowResizability(.contentSize)
+    }
+
+    @ViewBuilder
+    private var menuBarLabel: some View {
+        // Prefer branded template icon; fall back to SF Symbol when permissions need attention.
+        if !appModel.permissionsStatus.isReady {
+            Label("Magix", systemImage: "hand.raised.fill")
+        } else {
+            Label {
+                Text("Magix")
+            } icon: {
+                Image("MagixMenuBarIcon")
+                    .renderingMode(.template)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 16, height: 16)
+            }
+        }
     }
 }

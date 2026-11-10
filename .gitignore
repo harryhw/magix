@@ -22,12 +22,24 @@ Package.resolved
 
 # Signing / secrets (never commit)
 *.p12
+*.pfx
 *.cer
+*.cert
 *.mobileprovision
+*.provisionprofile
 AuthKey_*.p8
+*.p8
 notary-credentials*
+notarytool*
 .env
 .env.*
+*.pem
+!docs/**/*.pem.example
+id_rsa
+id_ed25519
+*.key
+GoogleService-Info.plist
+credentials.json
 
 # Archives / distribution
 *.xcarchive
