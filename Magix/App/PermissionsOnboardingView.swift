@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PermissionsOnboardingView: View {
     @ObservedObject var appModel: AppModel
+    @State private var didCopyPath = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -10,8 +11,26 @@ struct PermissionsOnboardingView: View {
                 .onAppear { MagixWindowSupport.bringToFrontForWindow() }
                 .onDisappear { MagixWindowSupport.restoreAccessoryPolicyIfNeeded() }
 
-            Text("Accessibility is required for the scroll event tap and synthetic actions. Input Monitoring is required on modern macOS for Magic Mouse MultitouchSupport contact frames.")
+            Text("Unsigned/debug Magix builds usually do not appear automatically. Use the + button in System Settings and choose this Magix.app, then enable the checkbox.")
                 .foregroundStyle(.secondary)
+
+            GroupBox("Add this Magix.app") {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(PermissionsHelper.runningAppBundlePath)
+                        .font(.system(.caption, design: .monospaced))
+                        .textSelection(.enabled)
+                    HStack {
+                        Button("Reveal Magix.app in Finder") {
+                            _ = PermissionsHelper.revealRunningAppInFinder()
+                        }
+                        Button(didCopyPath ? "Copied" : "Copy path") {
+                            PermissionsHelper.copyRunningAppPathToPasteboard()
+                            didCopyPath = true
+                        }
+                    }
+                }
+                .padding(4)
+            }
 
             GroupBox("Checklist") {
                 VStack(alignment: .leading, spacing: 10) {
@@ -31,7 +50,7 @@ struct PermissionsOnboardingView: View {
                 .padding(4)
             }
 
-            Text("After enabling Magix in both lists, quit and reopen the app once if frames stay at 0.")
+            Text("Steps: Open the pane → click + → select Magix.app from Finder → enable Magix’s checkbox. Repeat for both Accessibility and Input Monitoring. Then quit Magix and reopen once.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
@@ -54,6 +73,7 @@ struct PermissionsOnboardingView: View {
             }
         }
         .padding(24)
+        .frame(minWidth: 480)
         .onAppear {
             appModel.refreshPermissions()
             appModel.permissions.requestAllPrompts()

@@ -187,9 +187,28 @@ private struct StatusSettingsTab: View {
 private struct PermissionsSettingsTab: View {
     @ObservedObject var appModel: AppModel
     @Environment(\.openWindow) private var openWindow
+    @State private var didCopyPath = false
 
     var body: some View {
         Form {
+            Section("Add Magix.app via +") {
+                Text("Debug/unsigned builds often do not show up until you click + and pick Magix.app. Grant the same binary you are running.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text(PermissionsHelper.runningAppBundlePath)
+                    .font(.system(.caption, design: .monospaced))
+                    .textSelection(.enabled)
+                HStack {
+                    Button("Reveal Magix.app in Finder") {
+                        _ = PermissionsHelper.revealRunningAppInFinder()
+                    }
+                    Button(didCopyPath ? "Copied path" : "Copy path") {
+                        PermissionsHelper.copyRunningAppPathToPasteboard()
+                        didCopyPath = true
+                    }
+                }
+            }
+
             Section("Required for gestures") {
                 permissionRow(
                     title: "Accessibility",

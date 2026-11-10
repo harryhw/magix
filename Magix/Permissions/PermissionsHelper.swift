@@ -72,6 +72,26 @@ struct PermissionsHelper {
         openURL("x-apple.systempreferences:com.apple.LoginItems-Settings.extension")
     }
 
+    /// Bundle path of the Magix.app that is actually running (important for TCC +).
+    static var runningAppBundlePath: String {
+        Bundle.main.bundleURL.path
+    }
+
+    static var runningAppBundleURL: URL {
+        Bundle.main.bundleURL
+    }
+
+    @discardableResult
+    static func revealRunningAppInFinder() -> Bool {
+        NSWorkspace.shared.activateFileViewerSelecting([runningAppBundleURL])
+        return true
+    }
+
+    static func copyRunningAppPathToPasteboard() {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(runningAppBundlePath, forType: .string)
+    }
+
     private static func openURL(_ string: String) {
         guard let url = URL(string: string) else { return }
         NSWorkspace.shared.open(url)
